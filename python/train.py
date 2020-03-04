@@ -7,8 +7,8 @@ import csv
 import cv2
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Dense
 from keras.models import model_from_json
+from keras.layers import Conv2D, MaxPool2D, Dense, Flatten, Dropout
 
 # Just disables the warning, doesn't enable AVX/FMA
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -39,12 +39,6 @@ for i in range(classes) :
 Cells = np.array(data)
 labels = np.array(labels)
 
-for i in range(0, len(Cells)):
-    Cells[i] = exposure.equalize_adapthist(Cells[i], clip_limit=0.03)
-    print(i)
-cv2.imshow("test",Cells[3576])
-cv2.waitKey()
-
 # Randomize the order of the input images
 s = np.arange(Cells.shape[0])
 np.random.seed(43)
@@ -59,16 +53,12 @@ X_val = X_val.astype('float32')/255
 (y_train,y_val)=labels[(int)(0.2*len(labels)):],labels[:(int)(0.2*len(labels))]
 
 #Using one hote encoding for the train and validation labels
-from keras.utils import to_categorical
 y_train = to_categorical(y_train, 43)
 y_val = to_categorical(y_val, 43)
 
 #Definition of the DNN model
-
-from keras.models import Sequential
-from keras.layers import Conv2D, MaxPool2D, Dense, Flatten, Dropout
-
 model = Sequential()
+
 model.add(Conv2D(filters=32, kernel_size=(5,5), activation='relu', input_shape=X_train.shape[1:]))
 model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
 model.add(MaxPool2D(pool_size=(2, 2)))
@@ -80,6 +70,8 @@ model.add(Flatten())
 model.add(Dense(256, activation='relu'))
 model.add(Dropout(rate=0.5))
 model.add(Dense(43, activation='softmax'))
+
+model.summary()
 
 # Compilation of the model
 model.compile(
